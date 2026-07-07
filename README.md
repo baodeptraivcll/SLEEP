@@ -3,12 +3,11 @@
 This repository contains the implementation of a comprehensive benchmark comparing State-of-the-Art (SOTA) deep learning architectures for Sleep Staging using the **Sleep-EDF Expanded (Sleep Cassette)** dataset.
 
 ## 📌 Project Overview
-The main goal of this group project is to establish a rigorous, fair, and reproducible benchmarking pipeline to compare 5 classic models:
+The main goal of this group project is to establish a rigorous, fair, and reproducible benchmarking pipeline to compare 4 classic models:
 1. **DeepSleepNet** (CNN-BiLSTM)
 2. **TinySleepNet** (CNN-LSTM)
-3. **AttnSleep** (CNN-Attention)
-4. **SleepTransformer** (Transformer with CNN front-end variant)
-5. **MambaSleep** (State Space Model)
+3. **SleepTransformer** (Transformer with Sequence-to-Sequence Initialization)
+4. **WaveMamba** (State Space Model with Wavelet)
 
 ## 🎯 Current Status
 Currently, this repository highlights the complete, highly-optimized PyTorch implementation of **DeepSleepNet**.
