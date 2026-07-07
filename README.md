@@ -23,8 +23,11 @@ Currently, this repository highlights the complete, highly-optimized PyTorch imp
 .
 ├── models/
 │   └── deepsleepnet.py        # Optimized PyTorch implementation of DeepSleepNet
-├── data_preprocessing.py      # Script for Wake Trimming, Bandpass Filtering, and Z-score Norm (WIP)
-├── implementation_plan.md     # Detailed blueprint for the 5-model benchmark pipeline
+├── data_preprocessing.py      # Script for Wake Trimming, Bandpass Filtering, and Z-score Norm
+├── train_deepsleepnet_kaggle.ipynb # Kaggle Training Script (with WandB logging & MF1 Checkpoint)
+├── evaluate.ipynb             # Universal Kaggle Evaluation Template (Confusion Matrix & Hypnogram)
+├── project_narrative.md       # Team project rules and academic narrative (WandB metrics standard)
+├── implementation_plan.md     # Detailed blueprint for the 4-model benchmark pipeline
 └── README.md                  # This file
 ```
 
