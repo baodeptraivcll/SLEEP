@@ -6,7 +6,7 @@
 *   **Độ chính xác tổng thể (Accuracy):** 89.95%
 *   **Chỉ số Macro F1 (MF1):** 74.42%
 *   **Hệ số Cohen's Kappa:** 0.8018
-*   **Thời gian Inference:** 24.94 giây (CPU)
+*   **Thời gian Inference:** 24.30 giây (CPU)
 *   **Tổng số tham số mạng (Params):** 4035082
 
 ## 2. Chỉ số chi tiết từng Pha giấc ngủ
