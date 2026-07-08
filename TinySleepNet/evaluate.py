@@ -1,6 +1,6 @@
 import torch
 import time
-from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, cohen_kappa_score
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, cohen_kappa_score, classification_report
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -45,6 +45,9 @@ def evaluate_model(model, loader, device='cuda', verbose=True):
         print("-" * 47)
         for i, row in enumerate(cm):
             print(f"{classes[i]:>5} | {row[0]:>6} | {row[1]:>6} | {row[2]:>6} | {row[3]:>6} | {row[4]:>6}")
+            
+        print("\nPer-Class Metrics:")
+        print(classification_report(all_labels, all_preds, target_names=classes, digits=4))
     
     return acc, macro_f1, kappa, cm
 
