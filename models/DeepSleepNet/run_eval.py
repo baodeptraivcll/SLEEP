@@ -185,14 +185,12 @@ model.eval()
 
 # Nạp Data
 all_files = glob.glob(os.path.join(DATA_DIR, "*.npz"))
+test_files_names = ['SC4382.npz', 'SC4661.npz', 'SC4722.npz', 'SC4031.npz', 'SC4541.npz', 'SC4701.npz', 'SC4111.npz', 'SC4062.npz', 'SC4462.npz', 'SC4532.npz', 'SC4092.npz', 'SC4702.npz', 'SC4321.npz', 'SC4341.npz', 'SC4211.npz', 'SC4551.npz']
+test_files = [os.path.join(DATA_DIR, f) for f in test_files_names]
 if len(all_files) == 0:
     print(f"❌ Chưa có data trong {DATA_DIR}. Kiểm tra lại ổ Kaggle!")
 
 # Chúng ta lấy 20 file cuối làm đại diện Test Set (hoặc bạn tự chia K-Fold tuỳ ý)
-from sklearn.model_selection import KFold
-kf = KFold(n_splits=10, shuffle=True, random_state=42)
-_, test_idx = next(kf.split(all_files))
-test_files = [all_files[i] for i in test_idx]
 test_ds = SequenceDataset(test_files, seq_len=20, stride=20)
 test_loader = DataLoader(test_ds, batch_size=32, shuffle=False)
 
