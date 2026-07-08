@@ -2,6 +2,8 @@ import os
 import argparse
 import numpy as np
 import torch
+import warnings
+warnings.filterwarnings("ignore")
 import wandb
 import gc
 from torch.utils.data import DataLoader
@@ -38,7 +40,7 @@ def main():
             continue
             
         print(f"\n{'='*30}")
-        print(f"🚀 BẮT ĐẦU FOLD {fold + 1}/{args.k_folds}")
+        print(f"BẮT ĐẦU FOLD {fold + 1}/{args.k_folds}")
         print(f"{'='*30}")
         
         # Load data CHO ĐÚNG FOLD HIỆN TẠI VÀO RAM
@@ -86,7 +88,7 @@ def main():
         )
         
         # Đánh giá lại mô hình tốt nhất của Fold này
-        print(f"\n📊 ĐÁNH GIÁ CUỐI CÙNG FOLD {fold + 1}")
+        print(f"\nĐÁNH GIÁ CUỐI CÙNG FOLD {fold + 1}")
         model.load_state_dict(torch.load(best_model_path))
         from evaluate import evaluate_model
         acc, f1, kappa, cm = evaluate_model(model, val_loader, device=device, verbose=True)
@@ -112,7 +114,7 @@ def main():
         gc.collect()
         
     print(f"\n{'*'*40}")
-    print(f"🏆 KẾT QUẢ TỔNG HỢP {args.k_folds}-FOLD CV")
+    print(f"KẾT QUẢ TỔNG HỢP {args.k_folds}-FOLD CV")
     print(f"{'*'*40}")
     print(f"Mean Accuracy: {np.mean(all_acc):.4f} ± {np.std(all_acc):.4f}")
     print(f"Mean Macro F1: {np.mean(all_f1):.4f} ± {np.std(all_f1):.4f}")

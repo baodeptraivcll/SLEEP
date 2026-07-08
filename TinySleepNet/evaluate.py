@@ -40,7 +40,11 @@ def evaluate_model(model, loader, device='cuda', verbose=True):
         print(f"Macro F1: {macro_f1:.4f}")
         print(f"Cohen's Kappa: {kappa:.4f}")
         print("Confusion Matrix:")
-        print(cm)
+        classes = ['W', 'N1', 'N2', 'N3', 'REM']
+        print(f"{'':>5} | {'W':>6} | {'N1':>6} | {'N2':>6} | {'N3':>6} | {'REM':>6}")
+        print("-" * 47)
+        for i, row in enumerate(cm):
+            print(f"{classes[i]:>5} | {row[0]:>6} | {row[1]:>6} | {row[2]:>6} | {row[3]:>6} | {row[4]:>6}")
     
     return acc, macro_f1, kappa, cm
 
