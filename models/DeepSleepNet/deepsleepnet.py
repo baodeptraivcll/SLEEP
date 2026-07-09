@@ -1,115 +1,143 @@
 import torch
 import torch.nn as nn
 
+
 class DeepSleepNet(nn.Module):
     """
-    DeepSleepNet Model for Sleep Staging (Supratak et al., 2017).
-    Standardized to 1-step end-to-end sequence training.
+    DeepSleepNet-style architecture.
+
+    Input:
+        x: (B, L, C, 3000)
+
+    Output:
+        logits: (B, L, num_classes)
+
+    Core idea:
+        two CNN branches -> epoch features -> BiLSTM -> residual classifier
     """
-    def __init__(self, in_channels=1, num_classes=5):
-        super(DeepSleepNet, self).__init__()
-        
-        # Branch 1: Small Filter (High Frequency / Temporal focus)
-        self.branch1 = nn.Sequential(
-            nn.Conv1d(in_channels, 64, kernel_size=50, stride=6, bias=False),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
+
+    def __init__(
+        self,
+        in_channels=1,
+        num_classes=5,
+        base_channels=64,
+        feature_dim=512,
+        lstm_hidden=256,
+        lstm_layers=2,
+        dropout=0.5,
+    ):
+        super().__init__()
+
+        self.feature_dim = feature_dim
+
+        self.small_branch = nn.Sequential(
+            nn.Conv1d(in_channels, base_channels, kernel_size=50, stride=6, padding=24, bias=False),
+            nn.BatchNorm1d(base_channels),
+            nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=8, stride=8),
-            nn.Dropout(0.5),
-            
-            nn.ZeroPad1d((3, 4)),
-            nn.Conv1d(64, 128, kernel_size=8, stride=1, bias=False),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            
-            nn.ZeroPad1d((3, 4)),
-            nn.Conv1d(128, 128, kernel_size=8, stride=1, bias=False),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            
-            nn.ZeroPad1d((3, 4)),
-            nn.Conv1d(128, 128, kernel_size=8, stride=1, bias=False),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.MaxPool1d(kernel_size=4, stride=4)
-        )
-        
-        # Branch 2: Large Filter (Low Frequency / Spatial focus)
-        self.branch2 = nn.Sequential(
-            nn.Conv1d(in_channels, 64, kernel_size=400, stride=50, bias=False),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
-            nn.MaxPool1d(kernel_size=4, stride=4),
-            nn.Dropout(0.5),
-            
-            nn.ZeroPad1d((2, 3)),
-            nn.Conv1d(64, 128, kernel_size=6, stride=1, bias=False),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            
-            nn.ZeroPad1d((2, 3)),
-            nn.Conv1d(128, 128, kernel_size=6, stride=1, bias=False),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            
-            nn.ZeroPad1d((2, 3)),
-            nn.Conv1d(128, 128, kernel_size=6, stride=1, bias=False),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.MaxPool1d(kernel_size=2, stride=2)
-        )
-        
-        # Flattened CNN features size
-        cnn_out_features = 2688  # Exact flattened size after max pooling
-        self.dropout_cnn = nn.Dropout(0.5)
-        
-        # Sequence Learning (BiLSTM)
-        hidden_size = 512
-        self.bilstm = nn.LSTM(
-            input_size=cnn_out_features, 
-            hidden_size=hidden_size, 
-            num_layers=2, 
-            batch_first=True, 
-            bidirectional=True,
-            dropout=0.5
-        )
-        
-        # Shortcut connection mapping
-        self.shortcut = nn.Linear(cnn_out_features, hidden_size * 2)
-        
-        # Classifier
-        self.classifier = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Linear(hidden_size * 2, num_classes)
+            nn.Dropout(dropout),
+
+            nn.Conv1d(base_channels, base_channels * 2, kernel_size=8, stride=1, padding=4, bias=False),
+            nn.BatchNorm1d(base_channels * 2),
+            nn.ReLU(inplace=True),
+
+            nn.Conv1d(base_channels * 2, base_channels * 2, kernel_size=8, stride=1, padding=4, bias=False),
+            nn.BatchNorm1d(base_channels * 2),
+            nn.ReLU(inplace=True),
+
+            nn.Conv1d(base_channels * 2, base_channels * 2, kernel_size=8, stride=1, padding=4, bias=False),
+            nn.BatchNorm1d(base_channels * 2),
+            nn.ReLU(inplace=True),
+
+            nn.AdaptiveAvgPool1d(1),
         )
 
-    def _cnn_feature_extraction(self, x):
-        out1 = self.branch1(x)
-        out2 = self.branch2(x)
-        
-        out1 = out1.view(out1.size(0), -1)
-        out2 = out2.view(out2.size(0), -1)
-        
-        cnn_features = torch.cat((out1, out2), dim=1)
-        cnn_features = self.dropout_cnn(cnn_features)
-        return cnn_features
+        self.large_branch = nn.Sequential(
+            nn.Conv1d(in_channels, base_channels, kernel_size=400, stride=50, padding=200, bias=False),
+            nn.BatchNorm1d(base_channels),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=4, stride=4),
+            nn.Dropout(dropout),
+
+            nn.Conv1d(base_channels, base_channels * 2, kernel_size=6, stride=1, padding=3, bias=False),
+            nn.BatchNorm1d(base_channels * 2),
+            nn.ReLU(inplace=True),
+
+            nn.Conv1d(base_channels * 2, base_channels * 2, kernel_size=6, stride=1, padding=3, bias=False),
+            nn.BatchNorm1d(base_channels * 2),
+            nn.ReLU(inplace=True),
+
+            nn.Conv1d(base_channels * 2, base_channels * 2, kernel_size=6, stride=1, padding=3, bias=False),
+            nn.BatchNorm1d(base_channels * 2),
+            nn.ReLU(inplace=True),
+
+            nn.AdaptiveAvgPool1d(1),
+        )
+
+        cnn_dim = base_channels * 4
+
+        self.feature_projector = nn.Sequential(
+            nn.Linear(cnn_dim, feature_dim),
+            nn.LayerNorm(feature_dim),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+        )
+
+        self.bilstm = nn.LSTM(
+            input_size=feature_dim,
+            hidden_size=lstm_hidden,
+            num_layers=lstm_layers,
+            batch_first=True,
+            bidirectional=True,
+            dropout=dropout if lstm_layers > 1 else 0.0,
+        )
+
+        self.shortcut = nn.Linear(feature_dim, lstm_hidden * 2)
+
+        self.classifier = nn.Sequential(
+            nn.LayerNorm(lstm_hidden * 2),
+            nn.Dropout(dropout),
+            nn.Linear(lstm_hidden * 2, num_classes),
+        )
+
+        self._init_weights()
+
+    def _init_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Conv1d):
+                nn.init.kaiming_normal_(module.weight, nonlinearity="relu")
+            elif isinstance(module, nn.BatchNorm1d):
+                nn.init.ones_(module.weight)
+                nn.init.zeros_(module.bias)
+            elif isinstance(module, nn.Linear):
+                nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
+
+    def _extract_epoch_features(self, x):
+        small = self.small_branch(x).squeeze(-1)
+        large = self.large_branch(x).squeeze(-1)
+        features = torch.cat([small, large], dim=1)
+        features = self.feature_projector(features)
+        return features
 
     def forward(self, x, mask=None):
-        # Input shape: (B, L, 1, 3000)
-        B, L, C, Length = x.shape
-        x_flat = x.view(B * L, C, Length)
-        
-        # 1. Feature extraction
-        cnn_features = self._cnn_feature_extraction(x_flat) # (B * L, 2688)
-        seq_features = cnn_features.view(B, L, -1) # (B, L, 2688)
-        
-        # 2. BiLSTM
-        lstm_out, _ = self.bilstm(seq_features) # (B, L, 1024)
-        
-        # 3. Shortcut
-        shortcut_out = self.shortcut(seq_features) # (B, L, 1024)
-        combined_features = lstm_out + shortcut_out
-        
-        # 4. Classifier
-        logits = self.classifier(combined_features) # (B, L, 5)
+        if x.ndim != 4:
+            raise ValueError(f"Expected x shape (B, L, C, T), got {tuple(x.shape)}")
+
+        B, L, C, T = x.shape
+
+        x = x.reshape(B * L, C, T)
+        epoch_features = self._extract_epoch_features(x)
+        seq_features = epoch_features.reshape(B, L, self.feature_dim)
+
+        if mask is not None:
+            seq_features = seq_features * mask.unsqueeze(-1).float()
+
+        lstm_out, _ = self.bilstm(seq_features)
+        residual = self.shortcut(seq_features)
+
+        features = lstm_out + residual
+        logits = self.classifier(features)
+
         return logits

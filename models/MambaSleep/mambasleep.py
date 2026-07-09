@@ -2,151 +2,242 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class CNNFrontEnd(nn.Module):
     """
-    CNN front-end to extract features from each raw epoch (B*L, 1, 3000) -> (B*L, d_model)
-    """
-    def __init__(self, in_channels=1, out_channels=128):
-        super().__init__()
-        self.features = nn.Sequential(
-            nn.Conv1d(in_channels, 64, kernel_size=50, stride=6, padding=22), # 3000 -> 500
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
-            nn.MaxPool1d(kernel_size=8, stride=8, padding=2), # 500 -> 63
-            nn.Dropout(0.5),
-            
-            nn.Conv1d(64, 128, kernel_size=8, stride=1, padding=3), # 63 -> 63
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.MaxPool1d(kernel_size=4, stride=4, padding=2) # 63 -> 16
-        )
-        self.fc = nn.Linear(128 * 16, out_channels)
-        self.dropout = nn.Dropout(0.5)
-        
-    def forward(self, x):
-        feat = self.features(x)
-        feat = feat.view(feat.size(0), -1)
-        feat = self.dropout(feat)
-        feat = self.fc(feat)
-        return feat
+    Compact CNN front-end for raw EEG epochs.
 
-class SelectiveSSM(nn.Module):
+    Input:
+        x: (B, C, 3000)
+
+    Output:
+        features: (B, d_model)
     """
-    A pure PyTorch implementation of the Selective State Space (SSM) layer.
-    """
-    def __init__(self, d_model, d_state=16, d_inner=None):
+
+    def __init__(self, in_channels=1, d_model=128, dropout=0.2, pool_bins=16):
         super().__init__()
+
         self.d_model = d_model
-        self.d_state = d_state
-        self.d_inner = d_inner or d_model * 2
-        
-        # Projection layers
-        self.in_proj = nn.Linear(d_model, self.d_inner * 2, bias=False)
-        self.out_proj = nn.Linear(self.d_inner, d_model, bias=False)
-        
-        # 1D Convolution along sequence dimension
-        self.conv = nn.Conv1d(
-            in_channels=self.d_inner,
-            out_channels=self.d_inner,
-            kernel_size=3,
-            padding=1,
-            groups=self.d_inner
+        self.pool_bins = pool_bins
+
+        self.cnn = nn.Sequential(
+            nn.Conv1d(in_channels, 64, kernel_size=50, stride=6, padding=24, bias=False),
+            nn.BatchNorm1d(64),
+            nn.SiLU(inplace=True),
+            nn.MaxPool1d(kernel_size=8, stride=8),
+            nn.Dropout(dropout),
+
+            nn.Conv1d(64, 128, kernel_size=8, stride=1, padding=4, bias=False),
+            nn.BatchNorm1d(128),
+            nn.SiLU(inplace=True),
+
+            nn.Conv1d(128, 128, kernel_size=8, stride=1, padding=4, bias=False),
+            nn.BatchNorm1d(128),
+            nn.SiLU(inplace=True),
+
+            nn.AdaptiveAvgPool1d(pool_bins),
         )
-        
-        # SSM projections (selective scan inputs)
-        self.x_proj = nn.Linear(self.d_inner, self.d_state * 2 + 1, bias=False)
-        self.dt_proj = nn.Linear(1, self.d_inner, bias=True)
-        
-        # Initialize A parameter
-        A = torch.arange(1, self.d_state + 1, dtype=torch.float32).repeat(self.d_inner, 1)
-        self.A_log = nn.Parameter(torch.log(A))
-        
-        # Initialize D parameter
-        self.D = nn.Parameter(torch.ones(self.d_inner))
-        
+
+        self.proj = nn.Sequential(
+            nn.Linear(128 * pool_bins, d_model),
+            nn.LayerNorm(d_model),
+            nn.SiLU(),
+            nn.Dropout(dropout),
+        )
+
     def forward(self, x):
-        # x: (B, L, d_model)
-        B, L, D_model = x.shape
-        
-        # Project input
-        projected = self.in_proj(x) # (B, L, 2 * d_inner)
-        x_ssm, z = projected.chunk(2, dim=-1) # (B, L, d_inner), (B, L, d_inner)
-        
-        # Conv1d along sequence (L) dimension
-        x_ssm = x_ssm.transpose(1, 2) # (B, d_inner, L)
-        x_ssm = self.conv(x_ssm)
-        x_ssm = F.silu(x_ssm)
-        x_ssm = x_ssm.transpose(1, 2) # (B, L, d_inner)
-        
-        # Project to get dt, B, C
-        x_proj_out = self.x_proj(x_ssm)
-        dt, B_param, C_param = torch.split(x_proj_out, [1, self.d_state, self.d_state], dim=-1)
-        
-        # Compute selective dt
-        dt = F.softplus(self.dt_proj(dt)) # (B, L, d_inner)
-        
-        # Discretization parameters
-        A = -torch.exp(self.A_log)
-        
-        # Selective Scan (Iterate over sequence length L)
-        h = torch.zeros(B, self.d_inner, self.d_state, device=x.device, dtype=x.dtype)
-        ys = []
-        
+        features = self.cnn(x)
+        features = features.reshape(features.size(0), -1)
+        features = self.proj(features)
+        return features
+
+
+class MambaBlock(nn.Module):
+    """
+    Pure PyTorch Mamba-inspired sequence block.
+
+    This does not require the external mamba-ssm package.
+    It uses:
+        LayerNorm -> gated projection -> depthwise temporal convolution
+        -> diagonal selective SSM-style scan -> gated output projection.
+    """
+
+    def __init__(
+        self,
+        d_model=128,
+        expansion=2,
+        conv_kernel=3,
+        dropout=0.1,
+    ):
+        super().__init__()
+
+        self.d_model = d_model
+        self.inner_dim = d_model * expansion
+
+        self.norm = nn.LayerNorm(d_model)
+
+        self.in_proj = nn.Linear(d_model, self.inner_dim * 2)
+
+        self.depthwise_conv = nn.Conv1d(
+            self.inner_dim,
+            self.inner_dim,
+            kernel_size=conv_kernel,
+            padding=conv_kernel // 2,
+            groups=self.inner_dim,
+            bias=True,
+        )
+
+        self.ssm_proj = nn.Linear(self.inner_dim, self.inner_dim * 3)
+
+        self.A_log = nn.Parameter(torch.log(torch.arange(1, self.inner_dim + 1, dtype=torch.float32)))
+        self.D = nn.Parameter(torch.ones(self.inner_dim))
+
+        self.out_proj = nn.Linear(self.inner_dim, d_model)
+        self.dropout = nn.Dropout(dropout)
+
+    def selective_scan(self, u, delta, b, c):
+        """
+        u, delta, b, c:
+            (B, L, inner_dim)
+
+        Returns:
+            y: (B, L, inner_dim)
+        """
+        B, L, D = u.shape
+
+        A = -torch.exp(self.A_log).view(1, 1, D)
+        delta_A = torch.exp(torch.clamp(delta * A, min=-20.0, max=0.0))
+
+        state = torch.zeros(B, D, device=u.device, dtype=u.dtype)
+        outputs = []
+
         for t in range(L):
-            dt_t = dt[:, t, :].unsqueeze(-1) # (B, d_inner, 1)
-            B_t = B_param[:, t, :].unsqueeze(1) # (B, 1, d_state)
-            C_t = C_param[:, t, :].unsqueeze(1) # (B, 1, d_state)
-            x_t = x_ssm[:, t, :].unsqueeze(-1) # (B, d_inner, 1)
-            
-            # dA_t = exp(dt_t * A) -> (B, d_inner, d_state)
-            dA_t = torch.exp(dt_t * A.unsqueeze(0))
-            # dB_t = dt_t * B_t -> (B, d_inner, d_state)
-            dB_t = dt_t * B_t
-            
-            # Update state
-            h = dA_t * h + dB_t * x_t
-            
-            # Compute output y_t = sum(C_t * h) -> (B, d_inner)
-            y_t = torch.sum(h * C_t, dim=-1)
-            ys.append(y_t)
-            
-        ys = torch.stack(ys, dim=1) # (B, L, d_inner)
-        
-        # Add D connection
-        ys = ys + x_ssm * self.D.unsqueeze(0).unsqueeze(0)
-        
-        # Gate with z (residual gate)
-        out = ys * F.silu(z)
-        
-        # Project out
-        out = self.out_proj(out) # (B, L, d_model)
-        return out
+            alpha = delta_A[:, t, :]
+            beta = 1.0 - alpha
+
+            state = alpha * state + beta * torch.tanh(b[:, t, :])
+            y_t = state * torch.sigmoid(c[:, t, :]) + self.D * u[:, t, :]
+
+            outputs.append(y_t)
+
+        y = torch.stack(outputs, dim=1)
+        return y
+
+    def forward(self, x):
+        residual = x
+
+        x = self.norm(x)
+
+        u, gate = self.in_proj(x).chunk(2, dim=-1)
+
+        u = u.transpose(1, 2)
+        u = self.depthwise_conv(u)
+        u = u.transpose(1, 2)
+
+        u = F.silu(u)
+
+        delta, b, c = self.ssm_proj(u).chunk(3, dim=-1)
+        delta = F.softplus(delta)
+
+        y = self.selective_scan(u, delta, b, c)
+        y = y * F.silu(gate)
+
+        y = self.out_proj(y)
+        y = self.dropout(y)
+
+        return residual + y
+
 
 class MambaSleep(nn.Module):
     """
-    MambaSleep Model (Mamba-based adapted raw EEG sequence model).
-    Standardized to 1-step end-to-end sequence training.
+    MambaSleep-style architecture.
+
+    Input:
+        x: (B, L, C, 3000)
+
+    Output:
+        logits: (B, L, num_classes)
+
+    Core idea:
+        CNN epoch encoder -> stacked Mamba-inspired SSM blocks -> classifier
     """
-    def __init__(self, in_channels=1, num_classes=5, d_model=128, d_state=16):
+
+    def __init__(
+        self,
+        in_channels=1,
+        num_classes=5,
+        d_model=128,
+        num_layers=4,
+        expansion=2,
+        dropout=0.1,
+    ):
         super().__init__()
-        self.cnn_frontend = CNNFrontEnd(in_channels=in_channels, out_channels=d_model)
-        self.ssm1 = SelectiveSSM(d_model=d_model, d_state=d_state)
-        self.ssm2 = SelectiveSSM(d_model=d_model, d_state=d_state)
-        self.dropout = nn.Dropout(0.5)
-        self.classifier = nn.Linear(d_model, num_classes)
-        
+
+        self.d_model = d_model
+
+        self.frontend = CNNFrontEnd(
+            in_channels=in_channels,
+            d_model=d_model,
+            dropout=dropout,
+            pool_bins=16,
+        )
+
+        self.blocks = nn.ModuleList(
+            [
+                MambaBlock(
+                    d_model=d_model,
+                    expansion=expansion,
+                    conv_kernel=3,
+                    dropout=dropout,
+                )
+                for _ in range(num_layers)
+            ]
+        )
+
+        self.final_norm = nn.LayerNorm(d_model)
+
+        self.classifier = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(d_model, d_model * 2),
+            nn.SiLU(),
+            nn.Dropout(dropout),
+            nn.Linear(d_model * 2, num_classes),
+        )
+
+        self._init_weights()
+
+    def _init_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Conv1d):
+                nn.init.kaiming_normal_(module.weight, nonlinearity="relu")
+            elif isinstance(module, nn.BatchNorm1d):
+                nn.init.ones_(module.weight)
+                nn.init.zeros_(module.bias)
+            elif isinstance(module, nn.Linear):
+                nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
+
     def forward(self, x, mask=None):
-        # x shape: (B, L, 1, 3000)
-        B, L, C, Length = x.shape
-        x_flat = x.view(B * L, C, Length)
-        
-        feat_flat = self.cnn_frontend(x_flat) # (B * L, d_model)
-        feat_seq = feat_flat.view(B, L, -1) # (B, L, d_model)
-        
-        # Apply selective SSM layers
-        feat_seq = self.ssm1(feat_seq)
-        feat_seq = self.ssm2(feat_seq)
-        
-        feat_seq = self.dropout(feat_seq)
-        logits = self.classifier(feat_seq) # (B, L, 5)
+        if x.ndim != 4:
+            raise ValueError(f"Expected x shape (B, L, C, T), got {tuple(x.shape)}")
+
+        B, L, C, T = x.shape
+
+        x = x.reshape(B * L, C, T)
+        epoch_features = self.frontend(x)
+        seq_features = epoch_features.reshape(B, L, self.d_model)
+
+        if mask is not None:
+            seq_features = seq_features * mask.unsqueeze(-1).float()
+
+        for block in self.blocks:
+            seq_features = block(seq_features)
+
+            if mask is not None:
+                seq_features = seq_features * mask.unsqueeze(-1).float()
+
+        seq_features = self.final_norm(seq_features)
+        logits = self.classifier(seq_features)
+
         return logits
