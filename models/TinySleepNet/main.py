@@ -10,6 +10,20 @@ from torch.utils.data import DataLoader
 from dataset import get_kfold_splits, SleepEDFDataset
 from models.tinysleepnet import TinySleepNet
 from train import train_model
+from evaluate import evaluate_model
+
+def compute_class_weights_from_files(train_files, num_classes=5):
+    """Tính toán tỷ lệ mẫu của từng nhãn trên tập Train để gán trọng số cho Loss (chống Imbalance)"""
+    counts = np.zeros(num_classes, dtype=np.int64)
+    for f in train_files:
+        data = np.load(f, allow_pickle=True)
+        y = data["y"].astype(np.int64)
+        valid = (y >= 0) & (y < num_classes)
+        counts += np.bincount(y[valid], minlength=num_classes)
+        
+    counts = np.maximum(counts, 1)
+    weights = counts.sum() / (num_classes * counts)
+    return weights.tolist()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -35,7 +49,7 @@ def main():
     all_acc = []
 
     # Chạy K-Fold Cross Validation
-    for fold, (train_files, val_files) in enumerate(splits):
+    for fold, (train_files, val_files, test_files) in enumerate(splits):
         if fold + 1 < args.start_fold:
             continue
             
@@ -47,9 +61,11 @@ def main():
         print("Loading data for this fold...")
         train_dataset = SleepEDFDataset(train_files, augment=True, seq_length=args.seq_length)
         val_dataset = SleepEDFDataset(val_files, augment=False, seq_length=args.seq_length)
+        test_dataset = SleepEDFDataset(test_files, augment=False, seq_length=args.seq_length)
         
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
+        test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
         
         # Bắt buộc log WandB theo yêu cầu giáo viên (đồng bộ với team)
         wandb.init(
@@ -71,9 +87,10 @@ def main():
 
         model = TinySleepNet(in_channels=1, num_classes=5)
         
-        # ponytail: Weighted Loss phạt N1 nặng hơn do Class Imbalance (giống paper)
-        # Các trọng số mặc định cho Sleep-EDF (Wake, N1, N2, N3, REM)
-        class_weights = [1.0, 1.5, 1.0, 1.0, 1.0] 
+        # ponytail: Tự động tính Weighted Loss từ tập Train của fold này, KHÔNG HARDCODE
+        print("Đang tính toán Class Weights từ tập Train...")
+        class_weights = compute_class_weights_from_files(train_files)
+        print(f"Class weights: {class_weights}")
 
         best_model_path = f"best_model_fold_{fold+1}.pth"
         
@@ -87,17 +104,16 @@ def main():
             save_path=best_model_path
         )
         
-        # Đánh giá lại mô hình tốt nhất của Fold này
-        print(f"\nĐÁNH GIÁ CUỐI CÙNG FOLD {fold + 1}")
+        # Đánh giá lại mô hình tốt nhất của Fold này TRÊN TẬP TEST (ĐỂ LẤY ĐIỂM BÁO CÁO)
+        print(f"\nĐÁNH GIÁ CUỐI CÙNG FOLD {fold + 1} TRÊN TẬP TEST")
         model.load_state_dict(torch.load(best_model_path))
-        from evaluate import evaluate_model
-        acc, f1, kappa, cm = evaluate_model(model, val_loader, device=device, verbose=True)
+        acc, f1, kappa, cm = evaluate_model(model, test_loader, device=device, verbose=True)
         
         # Log final metrics for the fold
         wandb.log({
-            "final_fold_acc": acc,
-            "final_fold_f1": f1,
-            "final_fold_kappa": kappa
+            "final_test_acc": acc,
+            "final_test_f1": f1,
+            "final_test_kappa": kappa
         })
         
         # ponytail: Bắn file weights (.pth) lên mây WandB luôn để không bị mất khi Kaggle sập
@@ -110,7 +126,7 @@ def main():
         all_kappa.append(kappa)
         
         # ponytail: Giải phóng RAM cực mạnh để không bị tràn khi sang fold tiếp theo
-        del train_dataset, val_dataset, train_loader, val_loader
+        del train_dataset, val_dataset, test_dataset, train_loader, val_loader, test_loader
         gc.collect()
         
     print(f"\n{'*'*40}")

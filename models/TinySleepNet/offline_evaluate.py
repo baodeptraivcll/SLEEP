@@ -34,15 +34,15 @@ def main():
         print(f"EVALUATING FOLD {fold+1}/{args.k_folds}")
         print(f"==============================")
         
-        train_idx, val_idx = splits[fold]
-        val_dataset = SleepEDFDataset(val_idx)
+        train_idx, val_idx, test_idx = splits[fold]
+        test_dataset = SleepEDFDataset(test_idx)
         # num_workers=0 để tránh lỗi đa luồng trên Windows/Kaggle khi evaluate nhanh
-        val_loader = DataLoader(val_dataset, batch_size=20, shuffle=False, num_workers=0)
+        test_loader = DataLoader(test_dataset, batch_size=20, shuffle=False, num_workers=0)
         
         model = TinySleepNet().to(device)
         model.load_state_dict(torch.load(model_path, map_location=device))
         
-        acc, f1, kappa, cm = evaluate_model(model, val_loader, device=device, verbose=True)
+        acc, f1, kappa, cm = evaluate_model(model, test_loader, device=device, verbose=True)
         
         all_acc.append(acc)
         all_f1.append(f1)
