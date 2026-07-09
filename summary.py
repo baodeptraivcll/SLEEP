@@ -67,8 +67,12 @@ def compile_results(results_dir):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--results_dir', type=str, default='/kaggle/working/results', 
+    # For local/Colab:
+    parser.add_argument('--results_dir', type=str, default='./results', 
                         help='Path to the directory where fold results are saved')
+    # For Kaggle (uncomment if running on Kaggle):
+    # parser.add_argument('--results_dir', type=str, default='/kaggle/working/results', 
+    #                     help='Path to the directory where fold results are saved')
     args = parser.parse_args()
     compile_results(args.results_dir)
 

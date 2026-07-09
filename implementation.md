@@ -131,7 +131,7 @@ VAL_STRIDE = 20
 TEST_STRIDE = 20
 DTYPE = "float32"
 BATCH_SIZE = 32
-EARLY_STOPPING_PATIENCE = 10
+EARLY_STOPPING_PATIENCE = 15
 SEED = 42
 ```
 
@@ -717,7 +717,7 @@ Official config:
 
 ```text
 epochs = 50
-early_stopping_patience = 10
+early_stopping_patience = 15
 ```
 
 Nếu dùng early stopping:

@@ -146,7 +146,7 @@ def main():
     parser.add_argument('--test_stride', type=int, default=20, help='Test sequence stride')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate')
-    parser.add_argument('--early_stopping_patience', type=int, default=10, help='Patience for early stopping')
+    parser.add_argument('--early_stopping_patience', type=int, default=15, help='Patience for early stopping')
     parser.add_argument('--use_wandb', action='store_true', help='Use Weights & Biases')
     parser.add_argument('--run_all_folds', action='store_true', help='Train all folds sequentially')
     parser.add_argument('--seed', type=int, default=42, help='Reproducibility seed')

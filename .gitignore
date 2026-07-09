@@ -14,3 +14,4 @@ results/
 *.pth
 *.pt
 *.ckpt
+.aider*

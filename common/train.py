@@ -58,8 +58,10 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     return total_loss / len(loader) if len(loader) > 0 else 0.0
 
 def run_training(model, train_loader, val_loader, test_loader, train_files, args, device):
-    # Setup results output directory
-    out_dir = f"/kaggle/working/results/{args.architecture}/fold_{args.fold_id}"
+    # For local/Colab:
+    out_dir = os.path.join("results", args.architecture, f"fold_{args.fold_id}")
+    # For Kaggle (uncomment if running on Kaggle):
+    # out_dir = f"/kaggle/working/results/{args.architecture}/fold_{args.fold_id}"
     os.makedirs(out_dir, exist_ok=True)
     best_model_path = os.path.join(out_dir, "best_model.pth")
     
