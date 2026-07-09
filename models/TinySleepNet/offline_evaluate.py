@@ -1,17 +1,12 @@
 import os
 import argparse
-import sys
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-# Add project root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-
-from common.splits import get_kfold_splits
-from common.dataset import SleepEDFDataset
-from common.evaluate import evaluate_model
-from models.TinySleepNet.models.tinysleepnet import TinySleepNet
+from dataset import get_kfold_splits, SleepEDFDataset
+from evaluate import evaluate_model
+from models.tinysleepnet import TinySleepNet
 
 def main():
     parser = argparse.ArgumentParser()
@@ -29,13 +24,13 @@ def main():
     all_acc, all_f1, all_kappa = [], [], []
 
     for fold in range(args.k_folds):
-        # Check standard path results/TinySleepNet/fold_X/best_model.pth
+        # Check standard path: results/TinySleepNet/fold_X/best_model.pth
         model_path = os.path.join(args.model_dir, "results", "TinySleepNet", f"fold_{fold}", "best_model.pth")
         if not os.path.exists(model_path):
             # Fallback 1: best_model_fold_X.pth
             model_path = os.path.join(args.model_dir, f"best_model_fold_{fold}.pth")
         if not os.path.exists(model_path):
-            # Fallback 2: best_model_fold_{X+1}.pth (1-indexed)
+            # Fallback 2: best_model_fold_{X+1}.pth
             model_path = os.path.join(args.model_dir, f"best_model_fold_{fold+1}.pth")
             
         if not os.path.exists(model_path):
@@ -47,7 +42,6 @@ def main():
         print(f"==============================")
         
         train_idx, val_idx, test_idx = splits[fold]
-        # Evaluate on test set
         test_dataset = SleepEDFDataset(test_idx, seq_len=20, stride=20, split="test", pad_last=True)
         test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=0)
         
