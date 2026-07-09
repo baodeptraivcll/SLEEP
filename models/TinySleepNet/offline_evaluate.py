@@ -1,18 +1,22 @@
 import os
 import argparse
+import sys
 import numpy as np
 import torch
-import warnings
-warnings.filterwarnings("ignore")
 from torch.utils.data import DataLoader
-from dataset import get_kfold_splits, SleepEDFDataset
-from models.tinysleepnet import TinySleepNet
-from evaluate import evaluate_model
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from common.splits import get_kfold_splits
+from common.dataset import SleepEDFDataset
+from common.evaluate import evaluate_model
+from models.TinySleepNet.models.tinysleepnet import TinySleepNet
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, required=True, help="Path to SC_Data")
-    parser.add_argument("--model_dir", type=str, default=".", help="Directory containing best_model_fold_X.pth files")
+    parser.add_argument("--model_dir", type=str, default=".", help="Directory containing fold results or best_model_fold_X.pth files")
     parser.add_argument("--k_folds", type=int, default=10)
     args = parser.parse_args()
 
@@ -25,24 +29,37 @@ def main():
     all_acc, all_f1, all_kappa = [], [], []
 
     for fold in range(args.k_folds):
-        model_path = os.path.join(args.model_dir, f"best_model_fold_{fold+1}.pth")
+        # Check standard path results/TinySleepNet/fold_X/best_model.pth
+        model_path = os.path.join(args.model_dir, "results", "TinySleepNet", f"fold_{fold}", "best_model.pth")
         if not os.path.exists(model_path):
-            print(f"Warning: {model_path} not found. Skipping fold {fold+1}.")
+            # Fallback 1: best_model_fold_X.pth
+            model_path = os.path.join(args.model_dir, f"best_model_fold_{fold}.pth")
+        if not os.path.exists(model_path):
+            # Fallback 2: best_model_fold_{X+1}.pth (1-indexed)
+            model_path = os.path.join(args.model_dir, f"best_model_fold_{fold+1}.pth")
+            
+        if not os.path.exists(model_path):
+            print(f"Warning: model checkpoint not found for fold {fold}. Checked standard path and fallbacks. Skipping.")
             continue
             
         print(f"\n==============================")
-        print(f"EVALUATING FOLD {fold+1}/{args.k_folds}")
+        print(f"EVALUATING FOLD {fold}/{args.k_folds}")
         print(f"==============================")
         
-        train_idx, val_idx = splits[fold]
-        val_dataset = SleepEDFDataset(val_idx)
-        # num_workers=0 để tránh lỗi đa luồng trên Windows/Kaggle khi evaluate nhanh
-        val_loader = DataLoader(val_dataset, batch_size=20, shuffle=False, num_workers=0)
+        train_idx, val_idx, test_idx = splits[fold]
+        # Evaluate on test set
+        test_dataset = SleepEDFDataset(test_idx, seq_len=20, stride=20, split="test", pad_last=True)
+        test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=0)
         
-        model = TinySleepNet().to(device)
+        model = TinySleepNet(in_channels=1, num_classes=5).to(device)
         model.load_state_dict(torch.load(model_path, map_location=device))
         
-        acc, f1, kappa, cm = evaluate_model(model, val_loader, device=device, verbose=True)
+        metrics = evaluate_model(model, test_loader, device=device)
+        acc = metrics["accuracy"]
+        f1 = metrics["macro_f1"]
+        kappa = metrics["kappa"]
+        
+        print(f"Fold {fold} Test Results: ACC={acc:.4f} | Macro-F1={f1:.4f} | Kappa={kappa:.4f}")
         
         all_acc.append(acc)
         all_f1.append(f1)

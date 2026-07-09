@@ -39,7 +39,7 @@ class TinySleepNet(nn.Module):
         self.dropout = nn.Dropout(0.5)
         self.fc = nn.Linear(128, num_classes)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         # x shape: (B, Seq_Len, 1, 3000)
         B, Seq_Len, C, L = x.shape
         
