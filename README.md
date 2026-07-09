@@ -3,42 +3,47 @@
 This repository contains the implementation of a comprehensive benchmark comparing State-of-the-Art (SOTA) deep learning architectures for Sleep Staging using the **Sleep-EDF Expanded (Sleep Cassette)** dataset.
 
 ## 📌 Project Overview
-The main goal of this group project is to establish a rigorous, fair, and reproducible benchmarking pipeline to compare 4 classic models:
+The main goal of this project is to establish a rigorous, fair, and reproducible benchmarking pipeline to compare 4 classic models:
 1. **DeepSleepNet** (CNN-BiLSTM)
 2. **TinySleepNet** (CNN-LSTM)
-3. **SleepTransformer** (Transformer with Sequence-to-Sequence Initialization)
-4. **WaveMamba** (State Space Model with Wavelet)
+3. **SleepTransformer** (Transformer with Sequence-to-Sequence processing)
+4. **MambaSleep** (State Space Model)
 
-## 🎯 Current Status
-Currently, this repository highlights the complete, highly-optimized PyTorch implementation of **DeepSleepNet**.
-
-### DeepSleepNet Features:
-- **True-to-paper architecture**: Dual-branch CNN (Small & Large filters) + 2-layer BiLSTM + Shortcut/Residual Connection.
-- **Optimized for Sequence-of-Epochs**: The `forward` pass is heavily optimized to process `(Batch, Seq_Len, C, L)` 4D tensors, maximizing GPU parallelization across sequences.
-- **Zero-pad Optimization**: Removed standard PyTorch asymmetric padding overhead by using manual `nn.ZeroPad1d`.
+## 🎯 Shared Evaluation Protocol
+To ensure zero data leakage and absolute fairness, all models use the exact same:
+- **Subject-wise K-Fold**: 10-fold cross-validation split by `Subject ID` (78 subjects), never by recordings.
+- **Strict Boundaries**: Sequences are never concatenated across different subjects or different nights.
+- **Remainder Handling**: The final epochs of a night that do not perfectly fit into a Sequence Window are padded/masked so no sleep stages are missed.
+- **Identical Metrics**: Accuracy, Macro-F1 (fixed to labels `[0,1,2,3,4]`), Cohen's Kappa, and Confusion Matrix.
+- **WandB Logs**: Shared log structure and unified metric tracking.
 
 ## 📁 Repository Structure
 ```
 .
+├── common/
+│   ├── dataset.py             # Shared Sequence Dataloader with padding + mask support
+│   ├── splits.py              # Subject-wise splits with leakage checking
+│   ├── metrics.py             # Masked Accuracy, Macro-F1, Kappa, and Class F1 calculation
+│   ├── evaluate.py            # Sequence-level evaluation loop
+│   └── train.py               # Masked Loss trainer and checkpoint saving
 ├── models/
-│   └── deepsleepnet.py        # Optimized PyTorch implementation of DeepSleepNet
-├── data_preprocessing.py      # Script for Wake Trimming, Bandpass Filtering, and Z-score Norm
-├── train_deepsleepnet_kaggle.ipynb # Kaggle Training Script (with WandB logging & MF1 Checkpoint)
-├── evaluate.ipynb             # Universal Kaggle Evaluation Template (Confusion Matrix & Hypnogram)
-├── project_narrative.md       # Team project rules and academic narrative (WandB metrics standard)
-├── implementation_plan.md     # Detailed blueprint for the 4-model benchmark pipeline
+│   ├── TinySleepNet/          # Master template implementation wrapper folder
+│   ├── DeepSleepNet/          # 1-step end-to-end DeepSleepNet implementation
+│   ├── SleepTransformer/      # 1-step end-to-end SleepTransformer (raw EEG variant)
+│   └── MambaSleep/            # Pure PyTorch MambaSleep State Space Model
+├── main.py                    # Unified entry point for training any model on a specific fold
+├── summary.py                 # Results compiler that outputs summary.csv (mean ± std)
 └── README.md                  # This file
 ```
 
-## 🚀 Data Pipeline Design (Strict Constraints)
-To ensure **zero data leakage** and absolute fairness, our dataloader is designed with the following rigid rules:
-- **Subject-wise K-Fold**: 10-fold cross-validation split by `Subject ID` (78 subjects), never by recordings.
-- **Strict Boundaries**: Sequences are never concatenated across different subjects or different nights.
-- **Remainder Handling**: The final epochs of a night that do not perfectly fit into a Sequence Window are padded/masked to ensure no rare sleep stages (N1/REM) are missed during testing.
-
-## 📜 Usage
-To test the output shapes and parameters of the DeepSleepNet implementation:
+## 🚀 Usage
+To train a model on a single fold:
 ```bash
-python models/deepsleepnet.py
+python main.py \
+  --data_dir /path/to/npz_dataset \
+  --architecture TinySleepNet \
+  --fold_id 0 \
+  --epochs 50 \
+  --use_wandb
 ```
-*Expected Output:* Tensor shape `(Batch, Seq_Len, 5)` corresponding to the 5 AASM sleep stages (W, N1, N2, N3, REM).
+Replace `--architecture` with `TinySleepNet`, `DeepSleepNet`, `SleepTransformer`, or `MambaSleep`.
