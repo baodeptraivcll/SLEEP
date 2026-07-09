@@ -17,7 +17,7 @@ def compute_metrics(y_true, y_pred):
         }
         
     acc = accuracy_score(y_true, y_pred)
-    macro_f1 = f1_score(y_true, y_pred, average='macro')
+    macro_f1 = f1_score(y_true, y_pred, average='macro', labels=[0, 1, 2, 3, 4], zero_division=0)
     kappa = cohen_kappa_score(y_true, y_pred)
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1, 2, 3, 4])
     

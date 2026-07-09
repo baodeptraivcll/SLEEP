@@ -62,7 +62,7 @@ def run_single_fold(args, fold_id, splits, device):
         seq_len=args.seq_len,
         stride=args.train_stride,
         split="train",
-        pad_last=True,
+        pad_last=False,
         dtype=np.float32
     )
     val_dataset = SleepEDFDataset(

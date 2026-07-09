@@ -3,6 +3,16 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+def temporal_shift_no_wrap(x, shift):
+    if shift == 0:
+        return x
+    shifted = np.zeros_like(x)
+    if shift > 0:
+        shifted[..., shift:] = x[..., :-shift]
+    elif shift < 0:
+        shifted[..., :shift] = x[..., -shift:]
+    return shifted
+
 class SleepEDFDataset(Dataset):
     def __init__(self, npz_files, seq_len=20, stride=5, split="train", pad_last=True, dtype=np.float32):
         self.seq_len = seq_len
@@ -30,13 +40,7 @@ class SleepEDFDataset(Dataset):
             if augment:
                 # Max shift of 10% of 3000 = 300
                 shift = np.random.randint(-300, 300) 
-                x_subject = np.roll(x_subject, shift)
-                if shift < 0:
-                    x_subject = x_subject[:-1]
-                    y_subject = y_subject[:-1]
-                elif shift > 0:
-                    x_subject = x_subject[1:]
-                    y_subject = y_subject[1:]
+                x_subject = temporal_shift_no_wrap(x_subject, shift)
                     
             # Sequence Augmentation (Skip some initial epochs)
             if augment:

@@ -4,6 +4,16 @@ import torch
 from torch.utils.data import Dataset
 from sklearn.model_selection import KFold
 
+def temporal_shift_no_wrap(x, shift):
+    if shift == 0:
+        return x
+    shifted = np.zeros_like(x)
+    if shift > 0:
+        shifted[..., shift:] = x[..., :-shift]
+    elif shift < 0:
+        shifted[..., :shift] = x[..., -shift:]
+    return shifted
+
 def extract_subject_id(file_path):
     """
     SC4001.npz -> SC400
@@ -81,13 +91,7 @@ class SleepEDFDataset(Dataset):
             # Random Shift Data Augmentation (whole night)
             if augment:
                 shift = np.random.randint(-300, 300) 
-                x_subject = np.roll(x_subject, shift)
-                if shift < 0:
-                    x_subject = x_subject[:-1]
-                    y_subject = y_subject[:-1]
-                elif shift > 0:
-                    x_subject = x_subject[1:]
-                    y_subject = y_subject[1:]
+                x_subject = temporal_shift_no_wrap(x_subject, shift)
                     
             # Sequence Augmentation (Skip some initial epochs)
             if augment:
