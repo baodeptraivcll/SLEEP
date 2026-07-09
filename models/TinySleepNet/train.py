@@ -33,7 +33,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         mask = mask.to(device)
         
         optimizer.zero_grad()
-        logits = model(x)  # (B, L, C)
+        logits = model(x, mask=mask)  # (B, L, C)
         
         B, L, C = logits.shape
         logits_flat = logits.reshape(B * L, C)

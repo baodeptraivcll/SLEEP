@@ -13,7 +13,7 @@ def evaluate_model(model, loader, device='cuda'):
             y = y.to(device)
             mask = mask.to(device)
             
-            logits = model(x)  # (B, L, 5)
+            logits = model(x, mask=mask)  # (B, L, 5)
             preds = torch.argmax(logits, dim=-1)  # (B, L)
             
             valid_preds = preds[mask]

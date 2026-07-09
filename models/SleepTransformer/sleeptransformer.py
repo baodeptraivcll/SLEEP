@@ -156,7 +156,10 @@ class SleepTransformer(nn.Module):
         seq_features = self.pos_encoder_seq(seq_features)
         
         # Sequence Transformer Encoder
-        seq_out = self.seq_transformer(seq_features)  # (B, Seq_Len, d_model)
+        if mask is not None:
+            seq_out = self.seq_transformer(seq_features, src_key_padding_mask=~mask)  # (B, Seq_Len, d_model)
+        else:
+            seq_out = self.seq_transformer(seq_features)  # (B, Seq_Len, d_model)
         
         # Classifier
         logits = self.classifier(seq_out)  # (B, Seq_Len, num_classes)
