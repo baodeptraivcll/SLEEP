@@ -6,11 +6,16 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# WandB and results
+# WandB
 wandb/
-results/
 
-# PyTorch checkpoints
+# Heavy binary files in results (checkpoints, predictions)
+results/**/*.pth
+results/**/*.pt
+results/**/*.ckpt
+results/**/*.npy
+
+# PyTorch checkpoints everywhere else
 *.pth
 *.pt
 *.ckpt
