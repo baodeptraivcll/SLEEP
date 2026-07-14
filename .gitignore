@@ -1,6 +1,9 @@
 data/
 *.npz
 
+# Sleep-EDF preprocessed data folder
+SC_Data/
+
 # Python cached files
 __pycache__/
 *.pyc
