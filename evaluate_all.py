@@ -11,7 +11,7 @@ from common.splits import get_kfold_splits
 from common.dataset import SleepEDFDataset
 from common.evaluate import evaluate_model
 from main import build_model
-from summary import compile_results
+from tools.summary import compile_results
 
 def set_seed(seed):
     random.seed(seed)

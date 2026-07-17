@@ -35,8 +35,14 @@ To ensure zero data leakage and absolute fairness, all models use the exact same
 │   ├── DeepSleepNet/          # 1-step end-to-end DeepSleepNet implementation
 │   ├── SleepTransformer/      # 1-step end-to-end SleepTransformer (raw EEG variant)
 │   └── MambaSleep/            # Pure PyTorch MambaSleep State Space Model
+├── tools/
+│   ├── dataset_statistics.py  # Calculates global class distribution (Table 1)
+│   ├── fetch_and_plot_wandb.py# Fetches WandB runs and plots learning curves
+│   ├── plot_confusion_matrix.py# Aggregates and plots normalized confusion matrices
+│   ├── statistical_analysis.py# Performs Friedman and pairwise Wilcoxon tests
+│   └── summary.py             # Compiles metrics.json fold results into summary.csv
 ├── main.py                    # Unified entry point for training any model on a specific fold
-├── summary.py                 # Results compiler that outputs summary.csv (mean ± std)
+├── evaluate_all.py            # Sequence evaluation script for all models
 ├── test_dummy.py              # Smoke test to verify model shapes
 ├── requirements.txt           # Project dependencies
 └── README.md                  # This file
@@ -86,24 +92,24 @@ Replace `--architecture` with one of the following:
 ### Compile Summary Results
 Compile all cross-validation fold results into a single CSV and print summary performance:
 ```bash
-python summary.py --results_dir /path/to/results
+python tools/summary.py --results_dir /path/to/results
 ```
 
 ### Dataset Statistics (Table 1)
 Calculate the global class distribution across all 153 sleep recordings:
 ```bash
-python dataset_statistics.py
+python tools/dataset_statistics.py
 ```
 
 ### Statistical Analysis
 Perform a Friedman test followed by pairwise Wilcoxon signed-rank tests with Holm-Bonferroni correction and effect size (median difference and rank-biserial correlation) calculations:
 ```bash
-python statistical_analysis.py --results_dir /path/to/results
+python tools/statistical_analysis.py --results_dir /path/to/results
 ```
 
 ### Generate Confusion Matrices
 Aggregate confusion matrices from all 10 folds for each architecture and generate normalized heatmap comparisons:
 ```bash
-python plot_confusion_matrix.py --results_dir /path/to/results
+python tools/plot_confusion_matrix.py --results_dir /path/to/results
 ```
 
