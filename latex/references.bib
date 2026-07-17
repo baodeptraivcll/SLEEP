@@ -30,11 +30,19 @@
   publisher={IEEE}
 }
 
-@article{sano2025wavemamba,
-  title={WaveMamba: Efficient Full-Night Sleep Staging via Wavelets and State Space Models},
-  author={Sano, Akane and Guo, Peikun},
-  year={2025},
-  publisher={TechRxiv}
+@article{
+    sano2025wavemamba,
+    author = {Akane Sano  and Peikun Guo },
+    title = {{WaveMamba}: Efficient Full-Night Sleep Staging via Wavelets and State Space Models},
+    journal = {TechRxiv},
+    volume = {2025},
+    number = {0625},
+    pages = {},
+    year = {2025},
+    doi = {10.36227/techrxiv.175086730.05160218/v1},
+    URL = {https://www.techrxiv.org/doi/abs/10.36227/techrxiv.175086730.05160218/v1},
+    eprint = {https://www.techrxiv.org/doi/pdf/10.36227/techrxiv.175086730.05160218/v1},
+    abstract = {Automated sleep staging supports clinical diagnosis by classifying polysomnography recordings into sleep stages, but current methods often struggle with challenging transitional stages. Sleep exhibits complex multi-scale physiological patterns: distinct frequencyspecific neural oscillations (delta waves in deep sleep, spindles in N2, alpha rhythms during wake transitions) that evolve across natural sleep cycles. We introduce WaveMamba, which captures these patterns through discrete wavelet transform decomposition into physiologically meaningful frequency bands, each processed by dedicated Mamba branches. Cross-attention fusion dynamically integrates frequency-specific features based on sleep context. Mamba's selective state-space mechanism enables efficient processing of complete sleep recordings with linear computational scaling. Evaluated on Sleep-EDF and SHHS datasets using single-channel EEG, our method achieves 86.0\% accuracy and 78.6\% macro-F1 on Sleep-EDF78, with notable improvements in N1 detection. This work establishes a framework for capturing the multi-scale nature of physiological signals in automated sleep analysis. The full codebase will be open-sourced upon acceptance.}
 }
 
 @misc{sleepedfx_dataset,
@@ -66,7 +74,7 @@
   publisher={IEEE}
 }
 
-@article{phan2019joint,
+@article{phan2018joint,
   title={Joint classification and prediction CNN framework for automatic sleep stage classification},
   author={Phan, Huy and Andreotti, Fernando and Cooray, Navin and Ch{'e}n, Oliver Y and De Vos, Maarten},
   journal={IEEE Transactions on Biomedical Engineering},
@@ -75,7 +83,7 @@
   pages={1285--1296},
   year={2018},
   publisher={IEEE}
-}//
+}
 
 @article{phan2022xsleepnet,
   author={Phan, Huy and Ch{\'e}n, Oliver Y. and Tran, Minh C. and Koch, Philipp and Mertins, Alfred and De Vos, Maarten},
@@ -88,7 +96,7 @@
   doi={10.1109/TPAMI.2021.3070057}
 }
 
-@article{korkalainen2020clinical,
+@article{korkalainen2019clinical,
   title={Accurate deep learning-based sleep staging in a clinical population with suspected obstructive sleep apnea},
   author={Korkalainen, Henri and Aakko, Juhani and Nikkonen, Sami and Kainulainen, Samu and Leino, Akseli and Duce, Brett and Afara, Isaac O and Myllymaa, Sami and T{\"o}yr{\"a}s, Juha and Lepp{\"a}nen, Timo},
   journal={IEEE journal of biomedical and health informatics},
@@ -97,9 +105,9 @@
   pages={2073--2081},
   year={2019},
   publisher={IEEE}
-}//
+}
 
-@article{phan2021transfer,
+@article{phan2020transfer,
   title={Towards more accurate automatic sleep staging via deep transfer learning},
   author={Phan, Huy and Chen, Oliver Y and Koch, Philipp and Lu, Zongqing and McLoughlin, Ian and Mertins, Alfred and De Vos, Maarten},
   journal={IEEE Transactions on Biomedical Engineering},
@@ -111,11 +119,15 @@
   }
 
 @inproceedings{perslev2019utime,
-  title={U-time: A fully convolutional network for time series segmentation applied to sleep staging},
-  author={Perslev, Mathias and Jensen, Michael and Darkner, Sune and Jennum, Poul J{\o}rgen and Igel, Christian},
-  journal={Advances in neural information processing systems},
-  volume={32},
-  year={2019}
+    author = {Perslev, Mathias and Jensen, Michael and Darkner, Sune and Jennum, Poul J\o rgen and Igel, Christian},
+    booktitle = {Advances in Neural Information Processing Systems},
+    editor = {H. Wallach and H. Larochelle and A. Beygelzimer and F. d\textquotesingle Alch\'{e}-Buc and E. Fox and R. Garnett},
+    pages = {},
+    publisher = {Curran Associates, Inc.},
+    title = {{U-Time}: A Fully Convolutional Network for Time Series Segmentation Applied to Sleep Staging},
+    url = {https://proceedings.neurips.cc/paper_files/paper/2019/file/57bafb2c2dfeefba931bb03a835b1fa9-Paper.pdf},
+    volume = {32},
+    year = {2019}
 }
 
 @article{vandonckt2023traditional,
@@ -179,7 +191,7 @@
   publisher={IEEE}
 }
 
-@article{zhou2023lightweight,
+@article{zhou2022lightweight,
   title={A lightweight segmented attention network for sleep staging by fusing local characteristics and adjacent information},
   author={Zhou, Wei and Zhu, Hangyu and Shen, Ning and Chen, Hongyu and Fu, Cong and Yu, Huan and Shu, Feng and Chen, Chen and Chen, Wei},
   journal={IEEE Transactions on Neural Systems and Rehabilitation Engineering},
@@ -200,13 +212,14 @@
 }
 
 @article{huang2023children,
-  title={Alleviating class imbalance problem in automatic sleep stage classification},
-  author={Zhou, Dongdong and Xu, Qi and Wang, Jian and Xu, Hongming and Kettunen, Lauri and Chang, Zheng and Cong, Fengyu},
-  journal={IEEE Transactions on Instrumentation and Measurement},
-  volume={71},
-  pages={1--12},
-  year={2022},
-  publisher={IEEE}
+  title={Sleep stage classification in children using self-attention and Gaussian noise data augmentation},
+  author={Huang, Xinyu and Shirahama, Kimiaki and Irshad, Muhammad Tausif and Nisar, Muhammad Adeel and Piet, Artur and Grzegorzek, Marcin},
+  journal={Sensors},
+  volume={23},
+  number={7},
+  pages={3446},
+  year={2023},
+  publisher={MDPI}
 }
 
 @article{toma2023multichannel,
@@ -274,11 +287,15 @@
 }
 
 @inproceedings{vaswani2017attention,
-  title={Attention is all you need},
-  author={Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N and Kaiser, {\L}ukasz and Polosukhin, Illia},
-  journal={Advances in neural information processing systems},
-  volume={30},
-  year={2017}
+    author = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N and Kaiser, \L ukasz and Polosukhin, Illia},
+    booktitle = {Advances in Neural Information Processing Systems},
+    editor = {I. Guyon and U. Von Luxburg and S. Bengio and H. Wallach and R. Fergus and S. Vishwanathan and R. Garnett},
+    pages = {},
+    publisher = {Curran Associates, Inc.},
+    title = {Attention is All you Need},
+    url = {https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf},
+    volume = {30},
+    year = {2017}
 }
 
 @article{gu2023mamba,
@@ -288,7 +305,7 @@
   year={2023}
 }
 
-@inproceedings{loshchilov2019adamw,
+@article{loshchilov2017adamw,
   title={Decoupled weight decay regularization},
   author={Loshchilov, Ilya and Hutter, Frank},
   journal={arXiv preprint arXiv:1711.05101},

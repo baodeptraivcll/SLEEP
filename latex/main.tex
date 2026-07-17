@@ -11,6 +11,7 @@
 \usepackage{multirow}
 \usepackage{url}
 \usepackage{float}
+\usepackage{xurl}
 
 \begin{document}
 
@@ -18,10 +19,10 @@
 
 \author{
 \IEEEauthorblockN{
-1\textsuperscript{st} Nguyễn Viết Hưng,
-2\textsuperscript{nd} Lê Đức Gia Bảo,
-3\textsuperscript{rd} Huỳnh Quang Trí, and
-4\textsuperscript{th} Vũ Nguyễn Minh Long
+\textsuperscript{} Nguyen Viet Hung,
+\textsuperscript{} Le Duc Gia Bao,
+\textsuperscript{} Huynh Quang Tri, and
+\textsuperscript{} Vu Nguyen Minh Long
 }
 \IEEEauthorblockA{
 \textit{Artificial Intelligence Department}\\
@@ -47,7 +48,7 @@ Sleep staging is a central component of clinical sleep assessment. Overnight pol
 
 Public datasets such as Sleep-EDF have supported the development and comparison of data-driven approaches \cite{sleepedfx_dataset,kemp2000analysis}. Traditional systems commonly combine hand-crafted temporal, spectral, entropy, or time--frequency features with a conventional classifier. Such pipelines remain relevant because they can be interpretable and competitive when carefully designed \cite{vandonckt2023traditional,lal2023temporal}. Nevertheless, deep neural networks reduce dependence on manual feature engineering and can jointly learn local EEG morphology and temporal context.
 
-Convolutional recurrent architectures have played a major role in this development. DeepSleepNet combines parallel convolutional branches with bidirectional recurrent modeling \cite{supratak2017deepsleepnet}, while TinySleepNet uses a more compact CNN--LSTM design \cite{supratak2020tinysleepnet}. Sequence-to-sequence methods such as SeqSleepNet explicitly predict all stages in an input context \cite{phan2019seqsleepnet}. Other studies have explored joint classification and neighboring-stage prediction \cite{phan2019joint}, fully convolutional segmentation \cite{perslev2019utime}, and hybrid CNN--LSTM architectures \cite{li2023hybrid,toma2023multichannel}.
+Convolutional recurrent architectures have played a major role in this development. DeepSleepNet combines parallel convolutional branches with bidirectional recurrent modeling \cite{supratak2017deepsleepnet}, while TinySleepNet uses a more compact CNN--LSTM design \cite{supratak2020tinysleepnet}. Sequence-to-sequence methods such as SeqSleepNet explicitly predict all stages in an input context \cite{phan2019seqsleepnet}. Other studies have explored joint classification and neighboring-stage prediction \cite{phan2018joint}, fully convolutional segmentation \cite{perslev2019utime}, and hybrid CNN--LSTM architectures \cite{li2023hybrid,toma2023multichannel}.
 
 Attention-based models provide a different mechanism for temporal interaction. The Transformer introduced self-attention as an alternative to recurrence \cite{vaswani2017attention}. AttentionSleepNet and SleepTransformer adapted attention mechanisms to sleep staging \cite{eldele2021attention,phan2022sleeptransformer}. Multi-view and multimodal models have additionally combined raw signals, spectral representations, or several physiological channels \cite{phan2022xsleepnet,zheng2022mmasleepnet}. More recently, selective state-space models such as Mamba have been proposed for efficient sequence processing \cite{gu2023mamba}, and WaveMamba combined wavelet decomposition with state-space modeling for full-night sleep staging \cite{sano2025wavemamba}.
 
@@ -68,19 +69,19 @@ The contributions are:
 
 \subsection{Convolutional and Recurrent Sleep-Staging Models}
 
-DeepSleepNet demonstrated end-to-end sleep staging from raw single-channel EEG using two convolutional branches and bidirectional LSTM layers \cite{supratak2017deepsleepnet}. TinySleepNet reduced architectural complexity through a single convolutional branch and a unidirectional LSTM while retaining sequence modeling and class-aware training \cite{supratak2020tinysleepnet}. SeqSleepNet framed sleep staging as hierarchical many-to-many prediction, with an epoch-level encoder and a sequence-level recurrent network \cite{phan2019seqsleepnet}. A related framework jointly classified the current epoch and predicted neighboring stages to improve contextual representation learning \cite{phan2019joint}.
+DeepSleepNet demonstrated end-to-end sleep staging from raw single-channel EEG using two convolutional branches and bidirectional LSTM layers \cite{supratak2017deepsleepnet}. TinySleepNet reduced architectural complexity through a single convolutional branch and a unidirectional LSTM while retaining sequence modeling and class-aware training \cite{supratak2020tinysleepnet}. SeqSleepNet framed sleep staging as hierarchical many-to-many prediction, with an epoch-level encoder and a sequence-level recurrent network \cite{phan2019seqsleepnet}. A related framework jointly classified the current epoch and predicted neighboring stages to improve contextual representation learning \cite{phan2018joint}.
 
-Fully convolutional alternatives have also been studied. U-Time used an encoder--decoder architecture for dense time-series segmentation \cite{perslev2019utime}. Hybrid systems have combined deep residual feature extraction, squeeze-and-excitation, and LSTM modeling for single-channel EEG \cite{li2023hybrid}; multi-channel CNN--BiLSTM networks have been used when several physiological signals are available \cite{toma2023multichannel}. Evaluation in clinical populations with suspected obstructive sleep apnea further showed the need to assess robustness outside highly curated cohorts \cite{korkalainen2020clinical}.
+Fully convolutional alternatives have also been studied. U-Time used an encoder--decoder architecture for dense time-series segmentation \cite{perslev2019utime}. Hybrid systems have combined deep residual feature extraction, squeeze-and-excitation, and LSTM modeling for single-channel EEG \cite{li2023hybrid}; multi-channel CNN--BiLSTM networks have been used when several physiological signals are available \cite{toma2023multichannel}. Evaluation in clinical populations with suspected obstructive sleep apnea further showed the need to assess robustness outside highly curated cohorts \cite{korkalainen2019clinical}.
 
 \subsection{Multi-View, Transfer, and Self-Supervised Learning}
 
 Sleep-stage information can be represented as raw waveforms, spectral features, or several physiological modalities. XSleepNet jointly learned from raw and time--frequency views and used gradient blending to balance their contributions \cite{phan2022xsleepnet}. MMASleepNet used multimodal attention to integrate electrophysiological signals \cite{zheng2022mmasleepnet}. These approaches can exploit complementary information but require more complex inputs than the single-channel setting considered here.
 
-Generalization across subjects and datasets remains difficult. Personalized adaptation with single-night data has been explored using Kullback--Leibler regularization \cite{phan2020personalized}. Deep transfer learning and unsupervised domain adaptation have been proposed to reduce performance degradation across datasets and recording conditions \cite{phan2021transfer,fan2022domain}. Cross-domain transfer among EEG and ECG tasks further illustrates the potential and limitations of reusing physiological representations \cite{yang2023cross}. Self-supervised learning offers another route to label efficiency by exploiting unlabeled sleep recordings before supervised fine-tuning \cite{eldele2023selfsupervised}.
+Generalization across subjects and datasets remains difficult. Personalized adaptation with single-night data has been explored using Kullback--Leibler regularization \cite{phan2020personalized}. Deep transfer learning and unsupervised domain adaptation have been proposed to reduce performance degradation across datasets and recording conditions \cite{phan2020transfer,fan2022domain}. Cross-domain transfer among EEG and ECG tasks further illustrates the potential and limitations of reusing physiological representations \cite{yang2023cross}. Self-supervised learning offers another route to label efficiency by exploiting unlabeled sleep recordings before supervised fine-tuning \cite{eldele2023selfsupervised}.
 
 \subsection{Attention, Explainability, and Class Imbalance}
 
-The Transformer architecture established self-attention as a general sequence-modeling mechanism \cite{vaswani2017attention}. In sleep staging, attention has been applied both within epochs and across temporal context \cite{eldele2021attention,phan2022sleeptransformer}. Lightweight segmented attention networks fuse local characteristics with adjacent information \cite{zhou2023lightweight}, while parallel frequency-cut attention models interactions among time--frequency regions \cite{chen2023frequencycut}. Self-attention and Gaussian-noise augmentation have also been evaluated in pediatric sleep staging \cite{huang2023children}.
+The Transformer architecture established self-attention as a general sequence-modeling mechanism \cite{vaswani2017attention}. In sleep staging, attention has been applied both within epochs and across temporal context \cite{eldele2021attention,phan2022sleeptransformer}. Lightweight segmented attention networks fuse local characteristics with adjacent information \cite{zhou2022lightweight}, while parallel frequency-cut attention models interactions among time--frequency regions \cite{chen2023frequencycut}. Self-attention and Gaussian-noise augmentation have also been evaluated in pediatric sleep staging \cite{huang2023children}.
 
 Attention weights and post-hoc explanation methods have been used to improve model transparency. SleepTransformer investigated interpretability and uncertainty in addition to classification \cite{phan2022sleeptransformer}, and SleepXAI combined deep sleep-stage prediction with explainability techniques \cite{dutt2023sleepxai}. These capabilities belong to the original studies; they are not evaluated by the raw-EEG SleepTransformer-adapted implementation in this benchmark.
 
@@ -222,7 +223,7 @@ MambaSleep-adapted decomposes each epoch into $A_4,D_4,D_3,D_2,$ and $D_1$ using
 
 \subsection{Training Protocol}
 
-Every model is trained for at most 50 epochs with batch size 32. AdamW is used with learning rate $10^{-4}$ and weight decay $10^{-4}$ \cite{loshchilov2019adamw}. Gradients are clipped to a maximum norm of 5.0. Python, NumPy, and PyTorch random generators use seed 42, with deterministic cuDNN behavior enabled.
+Every model is trained for at most 50 epochs with batch size 32. AdamW is used with learning rate $10^{-4}$ and weight decay $10^{-4}$ \cite{loshchilov2017adamw}. Gradients are clipped to a maximum norm of 5.0. Python, NumPy, and PyTorch random generators use seed 42, with deterministic cuDNN behavior enabled.
 
 Class weights are computed only from the current training files:
 \begin{equation}
@@ -231,9 +232,8 @@ w_c=\frac{N}{5N_c+\epsilon},
 where $N_c$ is the number of training epochs belonging to class $c$. The masked weighted cross-entropy is
 \begin{equation}
 \mathcal{L}=
--\frac{1}{|\Omega|}
-\sum_{(b,t)\in\Omega}
-w_{y_{b,t}}\log p_{b,t,y_{b,t}},
+-\frac{\sum_{(b,t)\in\Omega} w_{y_{b,t}}\log p_{b,t,y_{b,t}}}
+      {\sum_{(b,t)\in\Omega} w_{y_{b,t}}}
 \end{equation}
 where $\Omega$ contains valid, non-padded positions. The checkpoint with the highest validation macro-F1 is retained. Training stops after 15 consecutive epochs without validation macro-F1 improvement.
 
@@ -330,9 +330,23 @@ MambaSleep-adapted vs DeepSleepNet-adapted & Kappa & +9.89 pp & 0.964 & 0.0117 \
 \label{fig:learning_curves}
 \end{figure}
 
-Fig.~\ref{fig:learning_curves} illustrates the aggregated learning curves for the four evaluated architectures. TinySleepNet-adapted and SleepTransformer-adapted converged rapidly, reaching stable performance near $0.74$ within 20 epochs on validation macro-F1. DeepSleepNet-adapted exhibited slow convergence and substantial variation across different subject-wise validation folds, which reflects the difficulty of training the deeper dual-branch CNN--BiLSTM architecture in a single end-to-end stage without two-stage optimization. SleepTransformer-adapted and MambaSleep-adapted achieved lower final training losses (below $0.10$) compared to TinySleepNet-adapted and DeepSleepNet-adapted (approximately $0.20$), indicating higher capacity. MambaSleep-adapted converged to a slightly lower validation macro-F1 ($0.70$) but exhibited very low variation across folds (indicated by the narrow standard deviation band), which is consistent with its lightweight state-space design.
+Fig.~\ref{fig:learning_curves} illustrates the aggregated learning curves for the four evaluated architectures. TinySleepNet-adapted and SleepTransformer-adapted converged rapidly, reaching stable performance near $0.74$ within 20 epochs on validation macro-F1. DeepSleepNet-adapted exhibited slow convergence and substantial variation across different subject-wise validation folds, which reflects the difficulty of training the deeper dual-branch CNN--BiLSTM architecture in a single end-to-end stage without two-stage optimization. SleepTransformer-adapted and MambaSleep-adapted achieved lower final training losses (below $0.10$) than TinySleepNet-adapted and DeepSleepNet-adapted (approximately $0.20$), suggesting that they fitted the training data more closely under the present optimization protocol. MambaSleep-adapted converged to a slightly lower validation macro-F1 ($0.70$) and showed a relatively narrow standard-deviation band across folds. This pattern indicates lower observed cross-fold variation under the present protocol, but it should not be interpreted as evidence of intrinsic architectural stability because each fold involved different subjects and only one training run was performed per fold.
 
-In terms of computational efficiency, TinySleepNet-adapted required $105.8 \pm 10.8$ minutes per fold on average ($134.0 \pm 3.0$ s/epoch, averaging $47.4$ epochs). DeepSleepNet-adapted and SleepTransformer-adapted required the most training time, taking $127.5 \pm 3.2$ minutes ($150.6 \pm 3.5$ s/epoch, averaging $50.8$ epochs) and $129.3 \pm 15.7$ minutes ($165.1 \pm 2.0$ s/epoch, averaging $47.0$ epochs) per fold, respectively. MambaSleep-adapted was the fastest architecture to train, requiring $83.4 \pm 17.1$ minutes per fold on average ($121.8 \pm 2.8$ s/epoch, averaging $41.0$ epochs). These durations indicate that the lightweight state-space layers in MambaSleep-adapted offer noticeable speed advantages over recurrent and self-attention operations in this sequence staging pipeline.
+In terms of observed training time, TinySleepNet-adapted required
+$105.8 \pm 10.8$ minutes per fold on average, with $134.0 \pm 3.0$
+s/epoch and an average of $47.4$ trained epochs. DeepSleepNet-adapted
+required $127.5 \pm 3.2$ minutes per fold, with $150.6 \pm 3.5$
+s/epoch and an average of $50.8$ epochs, whereas SleepTransformer-adapted
+required $129.3 \pm 15.7$ minutes per fold, with $165.1 \pm 2.0$
+s/epoch and an average of $47.0$ epochs. MambaSleep-adapted had the
+lowest observed per-epoch training time at $121.8 \pm 2.8$ s/epoch and
+required $83.4 \pm 17.1$ minutes per fold while training for an
+average of $41.0$ epochs. The lower per-epoch time suggests reduced
+computational cost under the present implementation and hardware
+configuration. However, its lower total fold duration was also
+influenced by earlier stopping. Therefore, total training time per
+fold should not be interpreted as a purely architectural efficiency
+measure.
 
 \subsection{Class-Wise Performance}
 
@@ -381,7 +395,11 @@ TinySleepNet-adapted achieved competitive stage F1 scores, particularly for REM 
 \centering
 \includegraphics[width=0.85\textwidth]{confusion_matrices.pdf}
 \caption{Normalized Confusion Matrices across all ten cross-validation folds for TinySleepNet-adapted, DeepSleepNet-adapted, SleepTransformer-adapted, and MambaSleep-adapted. Values inside each cell represent the percentage of true sleep stages (recall) and the absolute epoch counts in parentheses.}
-\label{fig:confusion_matricesN1 was the most difficult stage for every architecture, with F1 values from 0.3499 to 0.4790. Importantly, N1 was not the smallest class: N3 contained 13,039 epochs compared with 21,522 N1 epochs. N3 nevertheless achieved substantially higher F1. This finding indicates that N1 difficulty is not explained by frequency alone and is consistent with its transitional characteristics and overlap with Wake, N2, and REM.
+\label{fig:confusion_matrices}
+\end{figure*}
+
+
+N1 was the most difficult stage for every architecture, with F1 values from 0.3499 to 0.4790. Importantly, N1 was not the smallest class: N3 contained 13,039 epochs compared with 21,522 N1 epochs. N3 nevertheless achieved substantially higher F1. This finding indicates that N1 difficulty is not explained by frequency alone and is consistent with its transitional characteristics and overlap with Wake, N2, and REM.
 
 The consolidated confusion matrices in Fig.~\ref{fig:confusion_matrices} highlight the specific misclassifications driving these class-wise patterns. Across all four architectures, True N1 epochs are frequently misclassified as N2 ($19.5\%$ for TinySleepNet-adapted, $18.9\%$ for DeepSleepNet-adapted, $25.2\%$ for SleepTransformer-adapted, and $23.0\%$ for MambaSleep-adapted), reflecting the physiological transition where transitional slow-wave activity begins to merge with sleep spindles and K-complexes. True N1 is also commonly misclassified as Wake ($6.4\%$, $2.8\%$, $6.5\%$, and $9.4\%$, respectively) or REM ($7.9\%$, $9.6\%$, $7.4\%$, and $12.5\%$, respectively). Furthermore, True REM epochs are frequently misclassified as N1 ($11.6\%$ for TinySleepNet-adapted and $10.2\%$ for SleepTransformer-adapted) because they share low-voltage, mixed-frequency EEG background characteristics. Class-weighted loss improved the training objective but did not eliminate the minority-stage problem, which has also motivated specialized imbalance methods in prior work \cite{zhou2022imbalance}.
 
@@ -397,25 +415,28 @@ These standard deviations should not be interpreted as direct estimates of train
 \centering
 \caption{Comparison between reported performance of original architectures and our adapted implementations. The original reported results are included for contextual reference only and do not represent direct reproduction results from this study. Adapted implementations are not exact reproductions of the original architectures.}
 \label{tab:contextual_comparison}
-\begin{tabular}{lllp{3.8cm}ll}
+\centering
+\begin{tabular}{lllp{2.5cm}ll}
 \toprule
 Architecture & Implementation & Dataset / EEG Channel & Validation Protocol & Reported Result  \\
 \midrule
-\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}TinySleepNet-adapted\\ (based on TinySleepNet)\end{tabular}} & Original \cite{supratak2020tinysleepnet} & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold & 83.1\% ACC, 78.1\% MF1  \\
-& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold & 88.48\% ACC, 74.39\% MF1  \\
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}TinySleepNet-adapted\\ (based on TinySleepNet)\end{tabular}} & Original \cite{supratak2020tinysleepnet} & Sleep-EDF (78 sub.), Fpz--Cz & subject-wise 10-fold & 83.1\% ACC, 78.1\% MF1  \\
+& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz & subject-wise 10-fold & 88.48\% ACC, 74.39\% MF1  \\
 \midrule
-\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}DeepSleepNet-adapted\\ (based on DeepSleepNet)\end{tabular}} & Original two-stage \cite{supratak2017deepsleepnet} & Sleep-EDF (20 sub.), Fpz--Cz & Subject-wise 20-fold & 82.0\% ACC, 76.9\% MF1  \\
-& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold & 81.59\% ACC, 68.23\% MF1  \\
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}DeepSleepNet-adapted\\ (based on DeepSleepNet)\end{tabular}} & Original two-stage \cite{supratak2017deepsleepnet} & Sleep-EDF (20 sub.), Fpz--Cz & subject-wise 20-fold & 82.0\% ACC, 76.9\% MF1  \\
+& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz & subject-wise 10-fold & 81.59\% ACC, 68.23\% MF1  \\
 \midrule
-\multirow{3}{*}{\begin{tabular}[c]{@{}l@{}}SleepTransformer-adapted\\ (based on SleepTransformer)\end{tabular}} & Original scratch \cite{phan2022sleeptransformer} & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold & 81.4\% ACC, 74.3\% MF1  \\
-& Original fine-tuned (SHHS) \cite{phan2022sleeptransformer} & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold & 84.9\% ACC, 78.8\% MF1  \\
-& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold & 89.51\% ACC, 75.22\% MF1  \\
+\multirow{3}{*}{\begin{tabular}[c]{@{}l@{}}SleepTransformer-adapted\\ (based on SleepTransformer)\end{tabular}} & Original scratch \cite{phan2022sleeptransformer} & Sleep-EDF (78 sub.), Fpz--Cz & subject-wise 10-fold & 81.4\% ACC, 74.3\% MF1  \\
+& Original fine-tuned (SHHS) \cite{phan2022sleeptransformer} & Sleep-EDF (78 sub.), Fpz--Cz & subject-wise 10-fold & 84.9\% ACC, 78.8\% MF1  \\
+& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz & subject-wise 10-fold & 89.51\% ACC, 75.22\% MF1  \\
 \midrule
-\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}MambaSleep-adapted\\ (based on Mamba architecture)\end{tabular}} & Original WaveMamba full-night \cite{sano2025wavemamba} & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold & 86.0\% ACC, 78.6\% MF1 \\
-& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz & Subject-wise 10-fold (20-epoch) & 87.61\% ACC, 70.91\% MF1  \\
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}MambaSleep-adapted\\ (based on Mamba architecture)\end{tabular}} & Original WaveMamba full-night \cite{sano2025wavemamba} & Sleep-EDF (78 sub.), Fpz--Cz & subject-wise 10-fold & 86.0\% ACC, 78.6\% MF1 \\
+& Our adapted implementation & Sleep-EDF (78 sub.), Fpz--Cz &  subject-wise 10-fold  & 87.61\% ACC, 70.91\% MF1  \\
 \bottomrule
 \end{tabular}
 \end{table*}
+
+
 
 The benchmark produced three main findings. First, TinySleepNet-adapted remains a strong baseline despite its simpler recurrent architecture; its performance is competitive and only the accuracy difference was found to be statistically significant after correction. DeepSleepNet-adapted demonstrated the lowest observed metrics under this end-to-end training setup. SleepTransformer-adapted achieved the strongest observed overall performance, though its macro-F1 and Cohen's kappa advantages over TinySleepNet-adapted did not establish a statistically significant separation in the exploratory comparisons. Finally, MambaSleep-adapted achieved moderate results, exceeding DeepSleepNet-adapted but not matching the other architectures.
 
@@ -427,7 +448,7 @@ Third, N1 remained the principal class-level limitation. N3 was less frequent ye
 
 The full-recording preprocessing used here also affects interpretation. Because no wake trimming was applied, Wake represents 68.79\% of the corpus. Accuracy is therefore influenced heavily by Wake performance, which makes macro-F1 essential for comparing balanced stage recognition. The per-epoch Z-score normalization standardizes amplitude independently in each epoch and may improve numerical stability, but it can also remove between-epoch amplitude information. These are properties of the evaluated corpus rather than universal preprocessing recommendations.
 
-The study has several limitations. The statistical sensitivity is limited by the number of subject-level folds, and significance results should therefore be interpreted cautiously. Only one database and one EEG derivation were evaluated, so cross-dataset and cross-device generalization remain unknown. Each model was trained once per fold using one seeded execution; robustness across repeated random initializations was not measured. The four systems are repository adaptations with unequal fidelity to their source papers. No standardized parameter-count, inference-latency, memory, or energy benchmark was performed. The 20-epoch context may disadvantage methods intended for full-night modeling. Finally, the study does not evaluate interpretability, uncertainty calibration, transfer learning, self-supervised pretraining, personalization, or domain adaptation, despite their importance in prior work \cite{phan2020personalized,phan2021transfer,fan2022domain,eldele2023selfsupervised}.
+The study has several limitations. The statistical sensitivity is limited by the number of subject-level folds, and significance results should therefore be interpreted cautiously. Only one database and one EEG derivation were evaluated, so cross-dataset and cross-device generalization remain unknown. Each model was trained once per fold using one seeded execution; robustness across repeated random initializations was not measured. The four systems are repository adaptations with unequal fidelity to their source papers. No standardized parameter-count, inference-latency, memory, or energy benchmark was performed. The 20-epoch context may disadvantage methods intended for full-night modeling. Finally, the study does not evaluate interpretability, uncertainty calibration, transfer learning, self-supervised pretraining, personalization, or domain adaptation, despite their importance in prior work \cite{phan2020personalized,phan2020transfer,fan2022domain,eldele2023selfsupervised}.
 
 \section{Conclusion}
 
@@ -441,6 +462,7 @@ Future work should evaluate repeated seeds, external datasets, longer temporal c
 
 The benchmark implementation and fold-level results are available at:
 \url{https://github.com/baodeptraivcll/SLEEP}.
+
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
