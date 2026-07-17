@@ -20,7 +20,7 @@ def set_seed(seed):
 
 def build_model(architecture):
     if architecture == "TinySleepNet":
-        from models.TinySleepNet.models.tinysleepnet import TinySleepNet
+        from models.TinySleepNet.tinysleepnet import TinySleepNet
         return TinySleepNet(in_channels=1, num_classes=5)
     elif architecture == "DeepSleepNet":
         from models.DeepSleepNet.deepsleepnet import DeepSleepNet
