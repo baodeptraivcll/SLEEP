@@ -89,6 +89,12 @@ Compile all cross-validation fold results into a single CSV and print summary pe
 python summary.py --results_dir /path/to/results
 ```
 
+### Dataset Statistics (Table 1)
+Calculate the global class distribution across all 153 sleep recordings:
+```bash
+python dataset_statistics.py
+```
+
 ### Statistical Analysis
 Perform a Friedman test followed by pairwise Wilcoxon signed-rank tests with Holm-Bonferroni correction and effect size (median difference and rank-biserial correlation) calculations:
 ```bash
