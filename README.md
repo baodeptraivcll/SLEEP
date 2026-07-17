@@ -88,3 +88,16 @@ Compile all cross-validation fold results into a single CSV and print summary pe
 ```bash
 python summary.py --results_dir /path/to/results
 ```
+
+### Statistical Analysis
+Perform a Friedman test followed by pairwise Wilcoxon signed-rank tests with Holm-Bonferroni correction and effect size (median difference and rank-biserial correlation) calculations:
+```bash
+python statistical_analysis.py --results_dir /path/to/results
+```
+
+### Generate Confusion Matrices
+Aggregate confusion matrices from all 10 folds for each architecture and generate normalized heatmap comparisons:
+```bash
+python plot_confusion_matrix.py --results_dir /path/to/results
+```
+
