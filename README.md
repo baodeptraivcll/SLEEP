@@ -66,6 +66,10 @@ To ensure zero data leakage and absolute fairness, all models use the exact same
    ```bash
    https://drive.google.com/drive/folders/1C5_7nPyU-0sohmYsDRUFND7O1-ScLZdL?usp=sharing
    ```
+4. **best weights **
+   ```bash
+   https://drive.google.com/drive/folders/1C5_7nPyU-0sohmYsDRUFND7O1-ScLZdL?usp=sharing](https://drive.google.com/drive/folders/17NweDVmZ--cuTfbR-SHGk_7Mq3V6o1lU?usp=drive_link
+   ```
 ---
 
 ## 🚀 Usage
